@@ -9,7 +9,9 @@
     "dev": "tsx src/index.ts",
     "start": "tsx src/index.ts",
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "env:init": "node src/scripts/generateEnv.ts",
+    "env:reset": "node src/scripts/generateEnv.ts --force"
   },
   "engines": {
     "node": ">=20"

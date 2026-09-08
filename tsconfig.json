@@ -21,6 +21,9 @@
     "paths": {
       "@/*": ["./src/*"],
       "@protocol/*": ["./src/protocol/*"],
+      "@utility/*": ["./src/utility/*"],
+      "@request/*": ["./src/request/*"],
+      "@connection/*": ["./src/connection/*"],
     }
   },
   "include": ["src"]
