@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import "@tools/index.js";
-import "@connection/index.js";
+import { HostWebSocket } from "@connection/websocket.js";
 
-console.log("BentoTest running...");
+export const hostWebSocket = new HostWebSocket();

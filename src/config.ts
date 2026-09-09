@@ -9,6 +9,7 @@ import { getEnv } from "@utility/envUtility.js";
 interface HostWebSocketConfig {
   host: string;
   port: number;
+  token: string;
 }
 
 export const hostWebSocketConfig = {
@@ -16,6 +17,7 @@ export const hostWebSocketConfig = {
     return {
       host: getEnv("HOST", "127.0.0.1"),
       port: Number(getEnv("PORT", "2483")),
+      token: getEnv("TOKEN", ""),
     };
   },
 };

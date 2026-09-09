@@ -4,11 +4,15 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import type { JsonRpcResponse } from "@/protocol/jsonrpc.js";
+import type { JsonRpcResponse } from "@protocol/jsonrpc.js";
+import type { JsonValue } from "@protocol/jsonrpc.js";
 
 export interface RequestTask {
   id: string;
-  responder: Promise<JsonRpcResponse>;
+  resolve: (
+    value: JsonRpcResponse<JsonValue> | PromiseLike<JsonRpcResponse<JsonValue>>,
+  ) => void;
+  reject: (reason?: any) => void;
 }
 
 export class RequestManager {
@@ -29,13 +33,26 @@ export class RequestManager {
       return false;
     }
 
-    task.responder = Promise.resolve(response);
+    task.resolve(response);
     this.pendings.delete(id);
 
     return true;
   }
 
-  cancel(id: string): boolean {
+  cancel(id: string, reason?: any): boolean {
+    const task = this.pendings.get(id);
+
+    if (task) {
+      task.reject(reason);
+    }
+
     return this.pendings.delete(id);
+  }
+
+  cancel_all() {
+    for (const [id, task] of this.pendings) {
+      task.reject(`Request ${id} was cancelled.`);
+    }
+    this.pendings.clear();
   }
 }

@@ -24,6 +24,7 @@
       "@utility/*": ["./src/utility/*"],
       "@request/*": ["./src/request/*"],
       "@connection/*": ["./src/connection/*"],
+      "@tools/*": ["./src/tools/*"],
     }
   },
   "include": ["src"]

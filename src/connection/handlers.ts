@@ -4,43 +4,60 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import type {
-  JsonRpcRequest,
-  JsonRpcNotification,
-  JsonRpcResponse,
-} from "@protocol/jsonrpc.js";
-import type { HostHelloParam } from "@protocol/jsonrpc/params.js";
+import type { JsonRpcResponse } from "@protocol/jsonrpc.js";
 import {
-  HOST_HELLO,
-  PROTOCOL_VERSION,
-  JSON_RPC_VERSION,
-} from "@protocol/methods.js";
-import { parseFrame } from "@protocol/dispatch.js";
-import { randomUUID } from "node:crypto";
-import WebSocket from "ws";
+  parseHostWelcomeResult,
+  parseToolRegisterResult,
+} from "@protocol/jsonrpc/results.js";
 
-export function handleHostHello(ws: WebSocket) {
-  let id = randomUUID();
+export function handleHostWelcome(response: JsonRpcResponse): boolean {
+  if (response.error) {
+    console.error(
+      `Host welcome error: ${response.error.code} - ${response.error.message}`,
+    );
+    return false;
+  }
 
-  let request: JsonRpcRequest<HostHelloParam> = {
-    jsonrpc: JSON_RPC_VERSION,
-    id: id,
-    method: HOST_HELLO,
-    params: {
-      protocol_version: PROTOCOL_VERSION,
-      host_name: "BentoTest",
-    },
-  };
+  if (!response.result) {
+    console.error("Host welcome response missing result.");
+    return false;
+  }
 
-  // todo: register request
+  const result = parseHostWelcomeResult(response.result);
 
-  ws.send(JSON.stringify(request));
+  if (!result) {
+    console.error("Failed to parse host_welcome result.");
+    return false;
+  }
+
+  console.log(
+    `Host welcome result - namespace: ${result.namespace}, bento: ${result.bento_version}`,
+  );
+
+  return true;
 }
 
-export function handleMessage(ws: WebSocket, message: WebSocket.Data) {}
+export function handleToolRegistered(response: JsonRpcResponse): boolean {
+  if (response.error) {
+    console.error(
+      `Tool registered error: ${response.error.code} - ${response.error.message}`,
+    );
+    return false;
+  }
 
-function handleRequest(ws: WebSocket, request: JsonRpcRequest) {}
+  if (!response.result) {
+    console.error("Tool registered response missing result.");
+    return false;
+  }
 
-function handleNotification(ws: WebSocket, notification: JsonRpcNotification) {}
+  const result = parseToolRegisterResult(response.result);
 
-function handleResponse(ws: WebSocket, response: JsonRpcResponse) {}
+  if (!result) {
+    console.error("Failed to parse tool_registered result.");
+    return false;
+  }
+
+  console.log(`Tool Registered result - count: ${result.count}`);
+
+  return true;
+}
