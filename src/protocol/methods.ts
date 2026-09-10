@@ -8,6 +8,8 @@ export const JSON_RPC_VERSION = "2.0" as const;
 
 export const PROTOCOL_VERSION = "2026-07-28";
 
+export const HOST_NAME = "BentoTest";
+
 export const HOST_HELLO = "host.hello";
 export const HOST_READY = "host.ready";
 

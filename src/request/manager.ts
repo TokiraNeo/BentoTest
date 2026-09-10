@@ -30,6 +30,7 @@ export class RequestManager {
     const task = this.pendings.get(id);
 
     if (!task) {
+      console.warn(`No pending request found for id: ${id}`);
       return false;
     }
 

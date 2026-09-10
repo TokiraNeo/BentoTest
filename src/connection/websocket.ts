@@ -4,13 +4,12 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { hostWebSocketConfig } from "@/config.js";
+import { hostWebSocketConfig } from "@src/config.js";
 import WebSocket from "ws";
 import { randomUUID } from "crypto";
-import { RequestManager } from "@request/manager.js";
 import type { RequestTask } from "@request/manager.js";
+import { RequestManager } from "@request/manager.js";
 import type {
-  JsonRpcError,
   JsonRpcNotification,
   JsonRpcRequest,
   JsonRpcResponse,
@@ -23,6 +22,7 @@ import type {
 } from "@protocol/jsonrpc/params.js";
 import {
   HOST_HELLO,
+  HOST_NAME,
   HOST_READY,
   JSON_RPC_VERSION,
   PROTOCOL_VERSION,
@@ -30,9 +30,13 @@ import {
 } from "@protocol/methods.js";
 import {
   handleHostWelcome,
+  handleNotification,
+  handleRequest,
+  handleResponse,
   handleToolRegistered,
 } from "@connection/handlers.js";
 import { toolRegistry } from "@tools/registry.js";
+import { parseFrame } from "@protocol/dispatch.js";
 
 export class HostWebSocket {
   private requestManager: RequestManager;
@@ -97,9 +101,7 @@ export class HostWebSocket {
       );
     }, timeout);
 
-    const resp = await result.finally(() => clearTimeout(timer));
-
-    return resp;
+    return await result.finally(() => clearTimeout(timer));
   }
 
   private notify<P = JsonValue>(method: string, params: P): void {
@@ -112,23 +114,7 @@ export class HostWebSocket {
     this.ws.send(JSON.stringify(notification));
   }
 
-  private response<P = JsonValue>(id: string, payload: P): void {
-    const response: JsonRpcResponse<P> = {
-      jsonrpc: JSON_RPC_VERSION,
-      id: id,
-      result: payload,
-    };
-
-    this.ws.send(JSON.stringify(response));
-  }
-
-  private response_error(id: string, error: JsonRpcError): void {
-    const response: JsonRpcResponse = {
-      jsonrpc: JSON_RPC_VERSION,
-      id: id,
-      error: error,
-    };
-
+  private response<P = JsonValue>(response: JsonRpcResponse<P>): void {
     this.ws.send(JSON.stringify(response));
   }
 
@@ -137,7 +123,7 @@ export class HostWebSocket {
     try {
       const response = await this.request<HostHelloParam>(HOST_HELLO, {
         protocol_version: PROTOCOL_VERSION,
-        host_name: "BentoTest",
+        host_name: HOST_NAME,
       });
 
       if (!handleHostWelcome(response)) {
@@ -157,20 +143,48 @@ export class HostWebSocket {
         {
           tools: toolRegistry.definitions(),
         },
-        Infinity,
+        300000, // 5 minutes timeout for tools_register
       );
 
       if (!handleToolRegistered(response)) {
         this.ws.close();
         return;
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error("Failed to receive tool_register response:", error);
+      this.ws.close();
+      return;
+    }
 
     // notify host_ready
     this.notify<HostReadyParam>(HOST_READY, {});
   }
 
-  private async onMessage(message: WebSocket.Data) {}
+  private async onMessage(message: WebSocket.Data) {
+    const text = message.toString();
+
+    const frame = parseFrame(text);
+
+    if (frame === undefined) {
+      console.error("Failed to parse incoming message.");
+      return;
+    }
+
+    switch (frame.kind) {
+      case "request": {
+        await handleRequest(frame.value, this.response.bind(this));
+        break;
+      }
+      case "notification": {
+        handleNotification(frame.value);
+        break;
+      }
+      case "response": {
+        handleResponse(frame.value, this.requestManager);
+        break;
+      }
+    }
+  }
 
   private async onClose() {
     this.requestManager.cancel_all();

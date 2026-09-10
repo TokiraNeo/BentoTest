@@ -8,15 +8,13 @@ import type { ToolCallResult } from "@protocol/jsonrpc/results.js";
 import type { ToolDefinition, ToolRisk } from "@protocol/tool.js";
 import * as z from "zod";
 
-export interface ToolSchema {
+export interface ToolSchema<S extends z.ZodObject<any> = z.ZodObject<any>> {
   name: string;
   description: string;
-  arguments: z.ZodObject<any>;
+  arguments: S;
   risk?: ToolRisk;
   tags?: string[];
-  executor: (
-    args: z.infer<z.ZodObject<any>>,
-  ) => ToolCallResult | Promise<ToolCallResult>;
+  executor: (args: z.infer<S>) => ToolCallResult | Promise<ToolCallResult>;
 }
 
 export function covertSchemaToDefinition(schema: ToolSchema): ToolDefinition {

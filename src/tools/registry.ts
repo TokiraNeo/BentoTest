@@ -9,6 +9,7 @@ import type { ToolSchema } from "@tools/schema.js";
 import type { ToolCallResult } from "@protocol/jsonrpc/results.js";
 import type { ToolDefinition } from "@protocol/tool.js";
 import { covertSchemaToDefinition } from "@tools/schema.js";
+import type { JsonValue } from "@protocol/jsonrpc.js";
 
 export class ToolRegistry {
   private tools: Map<string, ToolSchema>;
@@ -17,7 +18,7 @@ export class ToolRegistry {
     this.tools = new Map();
   }
 
-  register(tool: ToolSchema): void {
+  private register(tool: ToolSchema): void {
     if (this.tools.has(tool.name)) {
       throw new Error(`Tool with name "${tool.name}" is already registered.`);
     }
@@ -38,15 +39,32 @@ export class ToolRegistry {
     return Array.from(this.tools.values()).map(covertSchemaToDefinition);
   }
 
-  async invoke(
-    tool: string,
-    args: z.infer<z.ZodObject<any>>,
-  ): Promise<ToolCallResult> {
+  async invoke(tool: string, args: JsonValue): Promise<ToolCallResult> {
     const toolSchema = this.tools.get(tool);
     if (!toolSchema) {
-      throw new Error(`Tool with name "${tool}" is not registered.`);
+      return {
+        content: [{ type: "text", text: `Tool "${tool}" is not found.` }],
+        is_error: true,
+      };
     }
-    return await toolSchema.executor(args);
+
+    const parsed = toolSchema.arguments.safeParse(args);
+
+    if (!parsed.success) {
+      return {
+        content: [{ type: "text", text: z.prettifyError(parsed.error) }],
+        is_error: true,
+      };
+    }
+
+    try {
+      return await toolSchema.executor(parsed.data);
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: String(error) }],
+        is_error: true,
+      };
+    }
   }
 }
 

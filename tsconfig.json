@@ -19,12 +19,13 @@
     "sourceMap": true,
 
     "paths": {
-      "@/*": ["./src/*"],
+      "@src/*": ["./src/*"],
       "@protocol/*": ["./src/protocol/*"],
       "@utility/*": ["./src/utility/*"],
       "@request/*": ["./src/request/*"],
       "@connection/*": ["./src/connection/*"],
       "@tools/*": ["./src/tools/*"],
+      "@routers/*": ["./src/routers/*"],
     }
   },
   "include": ["src"]
