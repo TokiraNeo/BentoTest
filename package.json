@@ -11,7 +11,8 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "env:init": "node src/scripts/generateEnv.ts",
-    "env:reset": "node src/scripts/generateEnv.ts --force"
+    "env:reset": "node src/scripts/generateEnv.ts --force",
+    "bun:build": "bun build src/index.ts --compile --outfile dist/bento-test.exe"
   },
   "engines": {
     "node": ">=20"
