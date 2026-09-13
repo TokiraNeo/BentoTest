@@ -1,6 +1,6 @@
 {
   "name": "bento-test",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "license": "GPL-3.0-or-later",
@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit",
     "env:init": "node src/scripts/generateEnv.ts",
     "env:reset": "node src/scripts/generateEnv.ts --force",
-    "bun:build": "bun build src/index.ts --compile --outfile dist/bento-test.exe"
+    "bun:build": "bun build src/index.ts --compile --outfile dist/bento_test_v1.0.1.exe"
   },
   "engines": {
     "node": ">=20"

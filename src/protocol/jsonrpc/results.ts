@@ -10,7 +10,6 @@ import type { JsonValue } from "@protocol/jsonrpc.js";
 
 export interface HostWelcomeResult {
   namespace: string;
-  protocol_version: string;
   bento_version: string;
 }
 
@@ -30,7 +29,6 @@ export function parseHostWelcomeResult(value: JsonValue): HostWelcomeResult | un
 
   if (
     typeof value.namespace !== "string" ||
-    typeof value.protocol_version !== "string" ||
     typeof value.bento_version !== "string"
   ) {
     return undefined;
@@ -38,7 +36,6 @@ export function parseHostWelcomeResult(value: JsonValue): HostWelcomeResult | un
 
   return {
     namespace: value.namespace,
-    protocol_version: value.protocol_version,
     bento_version: value.bento_version,
   };
 }
